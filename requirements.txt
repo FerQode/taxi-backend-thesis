@@ -7,4 +7,6 @@ celery
 python-decouple
 gunicorn
 pytest
+django-cors-headers
+django-extensions
 
