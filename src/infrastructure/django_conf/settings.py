@@ -20,8 +20,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    # 'src.infrastructure', # If we make it an app, but not strictly necessary yet
+    'src.infrastructure.database',
 ]
+
+AUTH_USER_MODEL = 'database.UserModel'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
