@@ -151,10 +151,6 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # CORS Configuration
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:4200",
-    "http://127.0.0.1:4200",
-    "https://taxi-gestion-front.onrender.com", # FRONTEND EN PRODUCCION
-]
-
+# "defense-mode": Allow all origins to prevent any demo surprises
+CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
