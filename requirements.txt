@@ -10,6 +10,10 @@ pytest
 django-cors-headers
 django-extensions
 djangorestframework-simplejwt
+<<<<<<< HEAD
+=======
+gunicorn
+>>>>>>> 273610f99dbb2bd2d44b381b5cb1bba607e4f46b
 dj-database-url
 whitenoise
 

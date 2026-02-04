@@ -1,0 +1,24 @@
+graph TD
+    User[Mobile App / Web Client]
+    
+    subgraph "Backend System"
+        LB[Load Balancer (Gunicorn)]
+        API[Django REST API]
+        Domain[Domain Layer (Business Logic)]
+        Infra[Infrastructure Layer]
+    end
+
+    DB[(PostgreSQL)]
+    Redis[(Redis)]
+
+    User -- "HTTPS / JWT" --> LB
+    LB --> API
+    API --> Domain
+    Domain --> Infra
+    Infra -- "ORM" --> DB
+    Infra -- "Cache Client" --> Redis
+
+    classDef container fill:#1168bd,stroke:#0b4884,color:#ffffff
+    classDef component fill:#85bbf0,stroke:#5d82a8,color:#000000
+
+    class LB,API,Domain,Infra container
