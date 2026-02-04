@@ -73,19 +73,36 @@ TEMPLATES = [
 WSGI_APPLICATION = 'src.infrastructure.django_conf.wsgi.application'
 
 # Database
-# Default to local .env credentials if DATABASE_URL not present
-DB_NAME = config('DB_NAME', default='taxi_db')
-DB_USER = config('DB_USER', default='postgres')
+# Database
+# Reads env vars with defaults to prevent 'UndefinedValueError' in Prod where they might not exist
+DB_NAME = config('DB_NAME', default='')
+DB_USER = config('DB_USER', default='')
 DB_PASSWORD = config('DB_PASSWORD', default='')
-DB_HOST = config('DB_HOST', default='db')
-DB_PORT = config('DB_PORT', default='5432')
+DB_HOST = config('DB_HOST', default='')
+DB_PORT = config('DB_PORT', default='')
 
+# Default to SQLite (Safe fallback)
 DATABASES = {
-    'default': dj_database_url.config(
-        default=f'postgres://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}',
-        conn_max_age=600
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
 }
+
+# 1. Try DATABASE_URL (Railway/Render)
+database_url = config('DATABASE_URL', default=None)
+if database_url:
+    DATABASES['default'] = dj_database_url.parse(database_url, conn_max_age=600)
+# 2. If no URL, check if local Postgres details are provided
+elif DB_NAME:
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': DB_NAME,
+        'USER': DB_USER,
+        'PASSWORD': DB_PASSWORD,
+        'HOST': DB_HOST,
+        'PORT': DB_PORT,
+    }
 
 # Cache (Redis)
 REDIS_URL = config('REDIS_URL', default='redis://redis:6379/1')
