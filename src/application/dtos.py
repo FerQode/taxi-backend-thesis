@@ -17,3 +17,15 @@ class RespuestaViajeDTO:
     conductor_nombre: Optional[str]
     tarifa_estimada: float
     mensaje: str
+
+@dataclass
+class RegistroUsuarioDTO:
+    nombre: str
+    email: str
+    password: str
+    rol: str
+
+@dataclass
+class LoginDTO:
+    email: str
+    password: str

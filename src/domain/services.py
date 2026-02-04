@@ -8,10 +8,17 @@ from .exceptions import ConductorNoEncontradoError
 class IEstrategiaAsignacion(ABC):
     """
     Interface Strategy: Define el contrato para los algoritmos de asignación de conductores.
-    Permite intercambiar la lógica de asignación (Cercanía, Rating, Antigüedad) sin cambiar el código cliente.
     """
     @abstractmethod
     def asignar_conductor(self, viaje: Viaje, conductores_disponibles: List[Conductor]) -> Conductor:
+        pass
+
+class IPasswordHasher(ABC):
+    """
+    Interface para servicio de hasheo de contraseñas.
+    """
+    @abstractmethod
+    def hash_password(self, raw_password: str) -> str:
         pass
 
 class AsignacionPorCercania(IEstrategiaAsignacion):
@@ -42,8 +49,7 @@ class AsignacionPorCercania(IEstrategiaAsignacion):
 
     def _calcular_distancia(self, ub1: Ubicacion, ub2: Ubicacion) -> float:
         """
-        Calcula distancia Euclidiana simple para propósitos académicos.
-        Para producción, usar Haversine.
+        Calcula distancia Euclidiana simple.
         """
         return math.sqrt(
             (ub1.latitud - ub2.latitud)**2 + 
