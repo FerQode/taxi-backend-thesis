@@ -150,7 +150,25 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 # Enable WhiteNoise's Gzip compression of static assets.
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-# CORS Configuration
-# "defense-mode": Allow all origins to prevent any demo surprises
-CORS_ALLOW_ALL_ORIGINS = True
+# --------------------------------------------------------
+# CORS Configuration (CORREGIDO)
+# --------------------------------------------------------
+
+# 1. Desactivar el "permitir a todos" porque choca con las credenciales
+CORS_ALLOW_ALL_ORIGINS = False
+
+# 2. Permitir cookies/tokens (Vital para el Login)
 CORS_ALLOW_CREDENTIALS = True
+
+# 3. Lista Explicita de quién puede entrar (Whitelist)
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:4200",         # Angular Local
+    "http://127.0.0.1:4200",         # Angular Local IP
+    "https://taxi-gestion-front.onrender.com", # TU FRONTEND EN PRODUCCIÓN
+]
+
+# 4. (Opcional pero recomendado) Asegurar CSRF también
+CSRF_TRUSTED_ORIGINS = [
+    "https://taxi-gestion-front.onrender.com",
+    "https://taxi-backend-thesis-production.up.railway.app",
+]
