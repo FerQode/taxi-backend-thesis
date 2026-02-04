@@ -1,0 +1,19 @@
+graph TD
+    User[Pasajero/Conductor]
+    Backend[Taxi Backend System]
+    DB[(PostgreSQL Database)]
+    Redis[(Redis Cache)]
+    ExtMaps[Google Maps API]
+
+    User -- "HTTPS/JSON" --> Backend
+    Backend -- "SQL (Read/Write)" --> DB
+    Backend -- "Cache/Session" --> Redis
+    Backend -- "Route Calculation" --> ExtMaps
+
+    classDef system fill:#1168bd,stroke:#0b4884,color:#ffffff
+    classDef person fill:#08427b,stroke:#052e56,color:#ffffff
+    classDef database fill:#2f95d7,stroke:#2378ad,color:#ffffff
+
+    class Backend system
+    class User person
+    class DB,Redis database

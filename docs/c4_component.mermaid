@@ -1,0 +1,47 @@
+graph TD
+    subgraph "Django Backend Container"
+        subgraph "Infrastructure Layer (Framework)"
+            URLs[URL Routing]
+            Views[API Views / ViewSets]
+            Serializers[Serializers (Data Mapping)]
+            Auth[JWT Authentication]
+        end
+
+        subgraph "Application Layer (Use Cases)"
+            UC_Reg[RegistrarUsuarioUseCase]
+            UC_Trip[SolicitarViajeUseCase]
+            DTOs[DTOs]
+        end
+
+        subgraph "Domain Layer (Core)"
+            Entities[Entities (Usuario, Viaje)]
+            Ports[Interfaces (Repository/Service)]
+            Strategy[Driver Assignment Strategy]
+        end
+
+        subgraph "Infrastructure Layer (Persistence)"
+            Repos[Django Repositories]
+            Models[Django Models (ORM)]
+        end
+    end
+
+    Client[Client App] --> URLs
+    URLs --> Views
+    Views --> Auth
+    Views --> Serializers
+    Views --> UC_Reg
+    Views --> UC_Trip
+    
+    UC_Reg --> DTOs
+    UC_Reg --> Ports
+    UC_Trip --> Strategy
+    
+    Ports -.-> Repos
+    Repos --> Models
+    
+    classDef layer fill:#ffffff,stroke:#333,stroke-dasharray: 5 5
+    classDef component fill:#85bbf0,stroke:#5d82a8,color:#000000
+    
+    class URLs,Views,Serializers,Auth,Repos,Models component
+    class UC_Reg,UC_Trip,DTOs component
+    class Entities,Ports,Strategy component
