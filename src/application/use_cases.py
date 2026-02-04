@@ -1,10 +1,10 @@
 import uuid
 from django.contrib.auth.hashers import make_password
-from src.domain.entities import Viaje, Ubicacion, ViajeEstado, Usuario, UsuarioRol
+from src.domain.entities import Viaje, Ubicacion, ViajeEstado, Usuario, UsuarioRol, Conductor, ConductorEstado
 from src.domain.repositories import IUsuarioRepository, IViajeRepository, IConductorRepository
 from src.domain.services import IEstrategiaAsignacion
 from src.domain.exceptions import RecursoNoEncontradoError
-from .dtos import SolicitudViajeDTO, RespuestaViajeDTO, RegistroUsuarioDTO
+from .dtos import SolicitudViajeDTO, RespuestaViajeDTO, RegistroUsuarioDTO, ActualizarConductorDTO
 
 class SolicitarViajeUseCase:
     def __init__(
@@ -33,7 +33,7 @@ class SolicitarViajeUseCase:
         nuevo_viaje = Viaje(
             id=str(uuid.uuid4()),
             cliente_id=cliente.id,
-            conductor_id=None, 
+            conductor_id=None,
             origen=origen,
             destino=destino,
             tarifa=self._calcular_tarifa_base(),
@@ -60,7 +60,7 @@ class SolicitarViajeUseCase:
         if conductor_asignado:
             nuevo_viaje.conductor_id = conductor_asignado.id
             nuevo_viaje.estado = ViajeEstado.ASIGNADO
-            
+
             conductor_id_resp = conductor_asignado.id
             conductor_nombre_resp = conductor_asignado.nombre
             mensaje = "Conductor asignado y en camino."
@@ -100,16 +100,120 @@ class RegistrarUsuarioUseCase:
 
         # 3. Crear Entidad
         usuario_id = str(uuid.uuid4())
-        
-        nuevo_usuario = Usuario(
-            id=usuario_id,
-            nombre=dto.nombre,
-            email=dto.email,
-            password_hash=password_hash,
-            rol=rol_enum
-        )
+
+        if rol_enum == UsuarioRol.CONDUCTOR:
+             # Instanciar Conductor (con sus atributos por defecto)
+             # NOTA: Al heredar de Usuario, toma los campos base.
+             # __post_init__ en Conductor forzará el rol a CONDUCTOR.
+             nuevo_usuario = Conductor(
+                id=usuario_id,
+                nombre=dto.nombre,
+                email=dto.email,
+                password_hash=password_hash
+            )
+        else:
+            # Cliente o Admin
+            nuevo_usuario = Usuario(
+                id=usuario_id,
+                nombre=dto.nombre,
+                email=dto.email,
+                password_hash=password_hash,
+                rol=rol_enum
+            )
 
         # 4. Guardar
         self.usuario_repository.guardar(nuevo_usuario)
 
         return {"id": usuario_id, "email": dto.email}
+
+class ActualizarConductorUseCase:
+    def __init__(
+        self,
+        usuario_repository: IUsuarioRepository
+    ):
+        self.usuario_repository = usuario_repository
+
+    def ejecutar(self, dto: ActualizarConductorDTO) -> dict:
+        # 1. Buscar Usuario
+        usuario = self.usuario_repository.buscar_por_id(dto.conductor_id)
+        if not usuario:
+             raise RecursoNoEncontradoError("Conductor", dto.conductor_id)
+
+        # 2. Validar que sea Conductor
+        if not isinstance(usuario, Conductor):
+            raise ValueError("El usuario no es un conductor")
+
+        # 3. Actualizar Datos
+        try:
+            nuevo_estado = ConductorEstado(dto.estado)
+        except ValueError:
+            raise ValueError(f"Estado invalido: {dto.estado}")
+
+        usuario.estado = nuevo_estado
+
+        # Solo actualizamos la ubicación si se envían datos válidos
+        if dto.latitud is not None and dto.longitud is not None:
+             usuario.ubicacion_actual = Ubicacion(dto.latitud, dto.longitud)
+
+        # Si cambia a FUERA_DE_SERVICIO, podríamos querer limpiar la ubicación,
+        # pero la lógica de negocio actual no lo exige explícitamente.
+        # Lo dejamos flexible.
+
+        # 4. Guardar (El repositorio maneja la persistencia del perfil)
+        self.usuario_repository.guardar(usuario)
+
+        return {"mensaje": "Conductor actualizado correctamente"}
+
+class ObtenerConductorUseCase:
+    def __init__(self, usuario_repository: IUsuarioRepository):
+        self.usuario_repository = usuario_repository
+
+    def ejecutar(self, conductor_id: str) -> dict:
+        usuario = self.usuario_repository.buscar_por_id(conductor_id)
+        if not usuario:
+             raise RecursoNoEncontradoError("Conductor", conductor_id)
+
+        if not isinstance(usuario, Conductor):
+            raise ValueError("El usuario no es un conductor")
+
+        return {
+            "id": usuario.id,
+            "nombre": usuario.nombre,
+            "email": usuario.email,
+            "estado": usuario.estado.name if usuario.estado else "FUERA_DE_SERVICIO",
+            "latitud": usuario.ubicacion_actual.latitud if usuario.ubicacion_actual else None,
+            "longitud": usuario.ubicacion_actual.longitud if usuario.ubicacion_actual else None
+        }
+
+class ListarUsuariosUseCase:
+    def __init__(self, usuario_repository: IUsuarioRepository):
+        self.usuario_repository = usuario_repository
+
+    def ejecutar(self) -> list[dict]:
+        usuarios = self.usuario_repository.listar_todos()
+
+        resultado = []
+        for u in usuarios:
+            # Separamos nombres y apellidos de forma básica
+            partes_nombre = u.nombre.split(' ', 1)
+            nombres = partes_nombre[0]
+            apellidos = partes_nombre[1] if len(partes_nombre) > 1 else ""
+
+            # El frontend usa "esta_activo" (boolean) para el badge de color
+            # Para conductores, lo ligamos a que estén Disponibles u Ocupados
+            esta_activo = True
+            if isinstance(u, Conductor):
+                esta_activo = u.estado in [ConductorEstado.DISPONIBLE, ConductorEstado.OCUPADO]
+
+            user_dict = {
+                "id": u.id,
+                "nombres": nombres,
+                "apellidos": apellidos,
+                "email": u.email,
+                "rol": u.rol.value,
+                "identificacion": "1402324543", # Un valor quemado por ahora coincidente con el UI del usuario
+                "esta_activo": esta_activo
+            }
+            resultado.append(user_dict)
+
+        return resultado

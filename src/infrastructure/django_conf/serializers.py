@@ -43,7 +43,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         else:
             # Fallback por defecto para no romper el login
             data['rol'] = 'CLIENTE'
-        
+
         return data
 
 # Re-exporting previous serializers to keep file valid
@@ -60,3 +60,8 @@ class RespuestaViajeSerializer(serializers.Serializer):
     conductor_nombre = serializers.CharField(allow_null=True)
     tarifa_estimada = serializers.FloatField()
     mensaje = serializers.CharField()
+
+class ActualizarConductorSerializer(serializers.Serializer):
+    estado = serializers.ChoiceField(choices=['DISPONIBLE', 'OCUPADO', 'FUERA_DE_SERVICIO'])
+    latitud = serializers.FloatField(required=False, allow_null=True)
+    longitud = serializers.FloatField(required=False, allow_null=True)

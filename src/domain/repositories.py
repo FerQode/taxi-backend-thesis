@@ -15,6 +15,10 @@ class IUsuarioRepository(ABC):
     def buscar_por_id(self, id: str) -> Optional[Usuario]:
         pass
 
+    @abstractmethod
+    def listar_todos(self) -> List[Usuario]:
+        pass
+
 class IViajeRepository(ABC):
     @abstractmethod
     def guardar(self, viaje: Viaje) -> None:
@@ -35,7 +39,7 @@ class IConductorRepository(ABC):
         Retorna conductores en estado DISPONIBLE dentro del radio especificado.
         """
         pass
-    
+
     @abstractmethod
     def actualizar_ubicacion(self, conductor_id: str, ubicacion: Ubicacion) -> None:
         pass

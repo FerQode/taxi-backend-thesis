@@ -10,4 +10,6 @@ pytest
 django-cors-headers
 django-extensions
 djangorestframework-simplejwt
+dj-database-url
+whitenoise
 

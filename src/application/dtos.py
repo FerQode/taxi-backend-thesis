@@ -29,3 +29,11 @@ class RegistroUsuarioDTO:
 class LoginDTO:
     email: str
     password: str
+
+@dataclass
+@dataclass
+class ActualizarConductorDTO:
+    conductor_id: str
+    estado: str
+    latitud: Optional[float] = None
+    longitud: Optional[float] = None

@@ -5,7 +5,7 @@ from src.domain.repositories import IUsuarioRepository, IViajeRepository, ICondu
 from src.infrastructure.database.models import UserModel, ConductorProfile, ViajeModel
 
 class DjangoUsuarioRepository(IUsuarioRepository):
-    
+
     def guardar(self, usuario: Usuario) -> None:
         # Mapping Domain -> ORM
         user_model, created = UserModel.objects.update_or_create(
@@ -17,7 +17,7 @@ class DjangoUsuarioRepository(IUsuarioRepository):
                 'role': usuario.rol.value
             }
         )
-        
+
         # Si es conductor, guardar perfil
         if usuario.rol == UsuarioRol.CONDUCTOR and isinstance(usuario, Conductor):
             ConductorProfile.objects.update_or_create(
@@ -43,20 +43,24 @@ class DjangoUsuarioRepository(IUsuarioRepository):
         except UserModel.DoesNotExist:
             return None
 
+    def listar_todos(self) -> List[Usuario]:
+        qs = UserModel.objects.select_related('conductor_profile').all()
+        return [self._to_domain(m) for m in qs]
+
     def _to_domain(self, model: UserModel) -> Usuario:
         # Mapping ORM -> Domain
         rol = UsuarioRol(model.role)
-        
+
         if rol == UsuarioRol.CONDUCTOR:
             profile = getattr(model, 'conductor_profile', None)
             ubicacion = None
             estado = ConductorEstado.FUERA_DE_SERVICIO
-            
+
             if profile:
                 estado = ConductorEstado(profile.estado)
                 if profile.latitud_actual is not None and profile.longitud_actual is not None:
                     ubicacion = Ubicacion(profile.latitud_actual, profile.longitud_actual)
-            
+
             return Conductor(
                 id=str(model.id),
                 nombre=model.nombre,
